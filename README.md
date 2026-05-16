@@ -35,20 +35,34 @@ and application uptime checking.
 ```
 AccuKnox-user-management-tests/
 │
-├── playwright-automation/
-│   ├── pages/
-│   │   ├── login_page.py             # Page Object: Login screen
-│   │   └── user_management_page.py  # Page Object: Admin > User Management
-│   ├── tests/
-│   │   └── test_user_management.py  # All automated test cases
-│   ├── conftest.py                  # Shared fixtures and test data
-│   ├── pytest.ini                   # Pytest config
-│   └── requirements.txt
+├── pages/
+│   ├── admin_page.py         # Page Object: Admin module
+│   ├── login_page.py         # Page Object: Login screen
+│   └── user_page.py          # Page Object: User form and actions
+│
+├── tests/
+│   ├── test_login.py         # TC-UM-01: Navigate to Admin module
+│   ├── test_add_user.py      # TC-UM-02 to TC-UM-04: Add user scenarios
+│   ├── test_search_user.py   # TC-UM-05 to TC-UM-06: Search scenarios
+│   ├── test_edit_user.py     # TC-UM-07: Edit user details
+│   ├── test_validate_user.py # TC-UM-08: Validate updated details
+│   └── test_delete_user.py   # TC-UM-09 to TC-UM-10: Delete scenarios
+│
+├── utils/
+│   ├── helpers.py            # Shared helper functions
+│   └── test_data.py          # Centralised test data
+│
+├── manual_test_cases/        # Manual test case document (Excel)
+├── reports/                  # Pytest HTML reports (generated on run)
+├── screenshots/              # Screenshots captured during test runs
 │
 ├── scripts/
-│   ├── system_health_monitor.py     # Objective 1: System Health Monitor
-│   └── app_health_checker.py        # Objective 4: Application Health Checker
+│   ├── system_health_monitor.py   # Problem 2, Obj 1: System Health Monitor
+│   └── app_health_checker.py      # Problem 2, Obj 4: App Health Checker
 │
+├── .gitignore
+├── pytest.ini
+├── requirements.txt
 └── README.md
 ```
 
@@ -66,30 +80,23 @@ AccuKnox-user-management-tests/
 
 ### Automated Test Scenarios
 
-The following core user management workflows are automated:
+Tests are split into one file per feature area for clarity:
 
-- Login as Admin and navigate to the Admin module
-- Add a new user with valid data
-- Validate required field errors when the form is submitted empty
-- Validate duplicate username error
-- Search for the newly created user by username
-- Search with a username that does not exist (no results)
-- Edit user details (role, status, username)
-- Validate that updated details are saved correctly
-- Delete a user and confirm removal
-- Cancel a delete and confirm the user still exists
-
-> **Note:** All 10 scenarios are written as individual test blocks. Some
-> delete and search tests can be flaky on the shared public demo because
-> other users may create or remove records between test steps — see the
-> environment note at the bottom.
+| File | Scenarios Covered |
+|---|---|
+| `test_login.py` | Login as Admin, navigate to Admin module |
+| `test_add_user.py` | Add user with valid data, duplicate username error, required field validation |
+| `test_search_user.py` | Search by username (found), search with no results |
+| `test_edit_user.py` | Edit user role, status, and username |
+| `test_validate_user.py` | Verify updated details persist after save |
+| `test_delete_user.py` | Delete user and confirm removal, cancel delete |
 
 ### Setup
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/<your-username>/AccuKnox-user-management-tests.git
-cd AccuKnox-user-management-tests/playwright-automation
+git clone https://github.com/sammmiksha/AccuKnox-user-management-tests.git
+cd AccuKnox-user-management-tests
 
 # 2. Create a virtual environment
 python -m venv venv
@@ -117,10 +124,13 @@ pytest --headed
 # Slow the browser down so you can follow what's happening
 pytest --headed --slowmo 500
 
-# Run a single test by name
-pytest tests/test_user_management.py::test_tc_um_01_navigate_to_admin_module
+# Run a single test file
+pytest tests/test_add_user.py
 
-# Generate an HTML report
+# Run a single test by name
+pytest tests/test_login.py::test_navigate_to_admin_module
+
+# Generate an HTML report (saved to reports/)
 pytest --html=reports/test_report.html --self-contained-html
 ```
 
@@ -140,6 +150,14 @@ playwright --version
 **Page Object Model** — selectors and actions for each page live in their own
 class under `pages/`. Tests import those classes and call methods rather than
 writing raw Playwright code directly in the test file.
+
+**One test file per feature** — splitting tests across `test_add_user.py`,
+`test_search_user.py`, etc. makes it easier to run only the area you're
+working on and keeps individual files short.
+
+**Centralised test data** — `utils/test_data.py` holds usernames, passwords,
+and other values used across tests. Changing test data means editing one file,
+not hunting through every test.
 
 **Selectors** — prefer visible text, ARIA roles, and label-based locators over
 CSS class names where possible, since OrangeHRM's class names are sometimes
@@ -233,17 +251,15 @@ the internet, so its data changes constantly and without warning.
 
 A few things this causes in practice:
 
-- The employee used in Add User tests (`Peter Mac Anderson`) must already
-  exist in the PIM module. If another user deletes that record, those tests
-  will fail at the autocomplete step.
+- The employee used in Add User tests must already exist in the PIM module.
+  If another user deletes that record, the autocomplete step will fail.
 - Delete and search tests can return unexpected results if someone else
   created or removed records between test steps.
 - The demo site is occasionally slow or temporarily down, which causes timeout
-  failures that are unrelated to the test logic itself.
+  failures unrelated to the test logic itself.
 
 In a real project this would be solved by running against a dedicated test
-environment with seeded, controlled data. For this assessment the tests handle
-the most common cases and include basic cleanup steps where practical.
+environment with seeded, controlled data.
 
 ---
 

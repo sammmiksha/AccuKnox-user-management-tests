@@ -4,8 +4,29 @@
 [![Playwright](https://img.shields.io/badge/Playwright-1.44.0-green)](https://playwright.dev/python/)
 [![Pytest](https://img.shields.io/badge/pytest-8.2.0-orange)](https://docs.pytest.org/)
 
-End-to-end automated tests for the **OrangeHRM User Management Module** plus
-**Linux system-health and application-health monitoring scripts**.
+Automation assessment project for the AccuKnox QA Trainee role.
+Covers E2E test automation for the OrangeHRM User Management module and two
+Linux system-monitoring scripts written in Python.
+
+---
+
+## Project Overview
+
+**Problem Statement 1** — Automate user management workflows on a public demo
+of OrangeHRM using Playwright + Pytest (Python), following the Page Object
+Model pattern.
+
+**Problem Statement 2** — Write Python scripts for system health monitoring
+and application uptime checking.
+
+---
+
+## Tech Stack
+
+- Python 3.11+
+- Playwright 1.44.0
+- pytest 8.2.0 / pytest-playwright 0.5.0
+- psutil (for system monitoring scripts)
 
 ---
 
@@ -14,229 +35,218 @@ End-to-end automated tests for the **OrangeHRM User Management Module** plus
 ```
 AccuKnox-user-management-tests/
 │
-├── playwright-automation/          # Problem Statement 1 — E2E Tests
+├── playwright-automation/
 │   ├── pages/
-│   │   ├── __init__.py
-│   │   ├── login_page.py           # Page Object: Login
-│   │   └── user_management_page.py # Page Object: Admin / User Management
+│   │   ├── login_page.py             # Page Object: Login screen
+│   │   └── user_management_page.py  # Page Object: Admin > User Management
 │   ├── tests/
-│   │   └── test_user_management.py # 10 test cases (TC-UM-01 to TC-UM-10)
-│   ├── conftest.py                 # Fixtures & shared test data
-│   ├── pytest.ini                  # Pytest configuration
-│   └── requirements.txt            # Python dependencies
+│   │   └── test_user_management.py  # All automated test cases
+│   ├── conftest.py                  # Shared fixtures and test data
+│   ├── pytest.ini                   # Pytest config
+│   └── requirements.txt
 │
-├── scripts/                        # Problem Statement 2 — Bash/Python Scripts
-│   ├── system_health_monitor.py    # Objective 1: System Health Monitor
-│   └── app_health_checker.py       # Objective 4: Application Health Checker
+├── scripts/
+│   ├── system_health_monitor.py     # Objective 1: System Health Monitor
+│   └── app_health_checker.py        # Objective 4: Application Health Checker
 │
 └── README.md
 ```
 
 ---
 
-## Problem Statement 1 — User Management E2E Tests
+## Problem Statement 1 — E2E Test Automation
 
-### Application Under Test (AUT)
+### Application Under Test
 
-| Item       | Value                                                                 |
-|------------|-----------------------------------------------------------------------|
-| URL        | https://opensource-demo.orangehrmlive.com/web/index.php/auth/login   |
-| Username   | `Admin`                                                               |
-| Password   | `admin123`                                                            |
+| | |
+|---|---|
+| URL | https://opensource-demo.orangehrmlive.com/web/index.php/auth/login |
+| Username | `Admin` |
+| Password | `admin123` |
 
-### Test Cases Automated
+### Automated Test Scenarios
 
-| ID        | Scenario                                       |
-|-----------|------------------------------------------------|
-| TC-UM-01  | Navigate to Admin Module                       |
-| TC-UM-02  | Add a New User — Valid Data                    |
-| TC-UM-03  | Add New User — Duplicate Username Validation   |
-| TC-UM-04  | Add New User — Required Field Validation       |
-| TC-UM-05  | Search Newly Created User by Username          |
-| TC-UM-06  | Search User — No Results Found                 |
-| TC-UM-07  | Edit User — Change Role, Status, Username      |
-| TC-UM-08  | Validate Updated User Details Persist          |
-| TC-UM-09  | Delete a Single User                           |
-| TC-UM-10  | Cancel Delete Operation                        |
+The following core user management workflows are automated:
 
-### Prerequisites
+- Login as Admin and navigate to the Admin module
+- Add a new user with valid data
+- Validate required field errors when the form is submitted empty
+- Validate duplicate username error
+- Search for the newly created user by username
+- Search with a username that does not exist (no results)
+- Edit user details (role, status, username)
+- Validate that updated details are saved correctly
+- Delete a user and confirm removal
+- Cancel a delete and confirm the user still exists
 
-- **Python 3.11+** installed and available on your PATH
-- **pip** package manager
+> **Note:** All 10 scenarios are written as individual test blocks. Some
+> delete and search tests can be flaky on the shared public demo because
+> other users may create or remove records between test steps — see the
+> environment note at the bottom.
 
-### Project Setup Steps
+### Setup
 
 ```bash
-# 1. Clone the repository
+# 1. Clone the repo
 git clone https://github.com/<your-username>/AccuKnox-user-management-tests.git
 cd AccuKnox-user-management-tests/playwright-automation
 
-# 2. Create and activate a virtual environment (recommended)
+# 2. Create a virtual environment
 python -m venv venv
+source venv/bin/activate        # Windows: venv\Scripts\activate
 
-# On Linux / macOS:
-source venv/bin/activate
-
-# On Windows:
-venv\Scripts\activate
-
-# 3. Install Python dependencies
+# 3. Install dependencies
 pip install -r requirements.txt
 
-# 4. Install Playwright browsers (Chromium only is sufficient)
+# 4. Install Playwright's Chromium browser
 playwright install chromium
 
-# 5. (Optional) Install system dependencies for Playwright on Linux
+# On Linux you may also need:
 playwright install-deps chromium
 ```
 
-### How to Run the Tests
+### Running the Tests
 
 ```bash
-# Navigate to the automation directory
-cd playwright-automation
-
-# Run all 10 tests (headless, verbose output)
+# Run all tests (headless by default)
 pytest
 
-# Run in headed mode (see the browser)
+# Run with a visible browser — good for demos and debugging
 pytest --headed
 
-# Run a specific test by ID
+# Slow the browser down so you can follow what's happening
+pytest --headed --slowmo 500
+
+# Run a single test by name
 pytest tests/test_user_management.py::test_tc_um_01_navigate_to_admin_module
 
-# Run tests and generate an HTML report
+# Generate an HTML report
 pytest --html=reports/test_report.html --self-contained-html
-
-# Run with slower execution (good for demos)
-pytest --headed --slowmo 500
 ```
 
 ### Playwright Version
 
 ```
 playwright==1.44.0
-pytest-playwright==0.5.0
 ```
 
-Check installed version:
+Verify locally:
 ```bash
 playwright --version
 ```
 
-### Design Decisions
+### Design Approach
 
-- **Page Object Model (POM)**: All selectors and actions are encapsulated in
-  `pages/login_page.py` and `pages/user_management_page.py`.
-- **Isolation**: Each test function gets a fresh browser context via the
-  `page` fixture in `conftest.py` — no state leaks between tests.
-- **Meaningful selectors**: Uses visible text, ARIA roles, and label-based
-  selectors in preference to fragile CSS class names.
-- **Waits**: `wait_for_load_state("networkidle")`, `wait_for_url()`, and
-  `wait_for_selector()` are used instead of hard `sleep()` calls.
-- **Cleanup**: TC-UM-02 cleans up any stale test user before creating a new
-  one, making the suite idempotent.
+**Page Object Model** — selectors and actions for each page live in their own
+class under `pages/`. Tests import those classes and call methods rather than
+writing raw Playwright code directly in the test file.
+
+**Selectors** — prefer visible text, ARIA roles, and label-based locators over
+CSS class names where possible, since OrangeHRM's class names are sometimes
+auto-generated and unreliable.
+
+**Waits** — use `wait_for_load_state("networkidle")` and `wait_for_url()`
+instead of `time.sleep()` to avoid brittle fixed delays.
 
 ---
 
-## Problem Statement 2 — System Scripts
+## Problem Statement 2 — Python Scripts
 
 ### Objective 1 — System Health Monitor
 
+Monitors CPU, memory, disk, and running process count against configurable
+thresholds. Prints an alert to the console and writes to a log file when any
+metric is exceeded.
+
 ```bash
 cd scripts
-
-# Install dependency
 pip install psutil
 
-# Run once and exit
+# Single check and exit
 python system_health_monitor.py --once
 
-# Monitor every 30 seconds, write alerts to custom log
-python system_health_monitor.py --interval 30 --log my_health.log
+# Continuous monitoring every 30 seconds, log to file
+python system_health_monitor.py --interval 30 --log health.log
 ```
 
-**What it monitors:**
+| Metric | Alert Threshold |
+|---|:---:|
+| CPU usage | > 80% |
+| Memory usage | > 80% |
+| Disk usage (`/`) | > 85% |
+| Running processes | > 300 |
 
-| Metric              | Default Threshold |
-|---------------------|:-----------------:|
-| CPU Usage (%)        | 80 %             |
-| Memory Usage (%)     | 80 %             |
-| Disk Usage (/)       | 85 %             |
-| Running Processes    | 300              |
-
-**Sample Output:**
+Sample output:
 ```
-2024-06-01 10:00:00 [INFO] =================================================================
-2024-06-01 10:00:00 [INFO] System Health Check — 2024-06-01 10:00:00
-2024-06-01 10:00:01 [INFO] ✔  OK    — CPU Usage: 23.4% (threshold: 80.0%)
-2024-06-01 10:00:01 [INFO] ✔  OK    — Memory Usage: 61.2% (threshold: 80.0%)
-2024-06-01 10:00:01 [INFO] ✔  OK    — Disk Usage (/): 54.0% (threshold: 85.0%)
+2024-06-01 10:00:01 [INFO]    ✔  OK    — CPU Usage: 23.4% (threshold: 80.0%)
+2024-06-01 10:00:01 [INFO]    ✔  OK    — Memory Usage: 61.2% (threshold: 80.0%)
+2024-06-01 10:00:01 [INFO]    ✔  OK    — Disk Usage (/): 54.0% (threshold: 85.0%)
 2024-06-01 10:00:01 [WARNING] ⚠  ALERT — Running Processes: 312 (threshold: 300)
 2024-06-01 10:00:01 [WARNING] SUMMARY: 1 alert(s) detected!
 ```
 
----
-
 ### Objective 4 — Application Health Checker
 
-```bash
-cd scripts
+Checks one or more URLs by HTTP status code and classifies each as UP,
+DEGRADED, or DOWN. Optionally verifies a keyword is present in the response
+body. Outputs a plain-text summary and a JSON result.
 
-# Check default URLs (OrangeHRM + control endpoints)
+```bash
+# Check the default URLs (OrangeHRM demo + two control endpoints)
 python app_health_checker.py --once
 
 # Check custom URLs
 python app_health_checker.py --urls https://example.com https://myapp.io --once
 
-# Watch mode — check every 60 seconds
+# Continuous watch mode
 python app_health_checker.py --interval 60 --log app_health.log
-
-# Check URLs from a text file (one URL per line)
-python app_health_checker.py --config urls.txt --once
 ```
 
-**Status Definitions:**
+| Status | Meaning |
+|---|---|
+| `✔ UP` | HTTP 2xx received (and keyword found, if one is configured) |
+| `⚠ DEGRADED` | HTTP 3xx/4xx, or keyword missing on an otherwise-200 response |
+| `✗ DOWN` | HTTP 5xx, connection refused, timeout, or DNS failure |
 
-| Status     | Meaning                                                  |
-|------------|----------------------------------------------------------|
-| `✔ UP`     | HTTP 2xx + optional keyword found in response body       |
-| `⚠ DEGRADED` | HTTP 3xx/4xx, or keyword missing on an otherwise 200 page |
-| `✗ DOWN`   | HTTP 5xx, connection refused, timeout, or DNS failure    |
-
-**Sample Output:**
-```
-[✔ UP]       OrangeHRM Demo  HTTP 200   432.1 ms    | keyword: ✔
-[✔ UP]       HTTPStat 200    HTTP 200   123.4 ms
-[✗ DOWN]     HTTPStat 503    HTTP 503   89.2 ms
-TOTAL: 3 checked  |  ✔ Up: 2  |  ⚠ Degraded: 0  |  ✗ Down: 1
-```
-
-Exit code is `1` if any application is DOWN (useful for CI/CD integration).
+Exits with code `1` if any target is DOWN — works as a basic CI health gate.
 
 ---
 
-## Bugs / Observations Encountered During Testing
+## Bugs and Observations
+
+Things noticed while manually exploring the AUT and writing the automation:
 
 | # | Observation | Severity |
-|---|-------------|----------|
-| 1 | Employee Name auto-complete only accepts names of **existing PIM employees** — cannot type arbitrary names. Pre-condition: employee must exist in PIM. | Medium |
-| 2 | Demo instance does not enforce password complexity rules (e.g., allows simple passwords). | Low |
-| 3 | Confirmation dialog reads "Are you Sure?" (capital S in "Sure") — possible typo in OrangeHRM UI. | Info |
-| 4 | Username search is case-insensitive — documented behaviour, not a defect. | Info |
+|---|---|---|
+| 1 | The Employee Name field uses an autocomplete that only matches employees already in the PIM module. You cannot type a free-form name — the employee record must exist first. This is a required pre-condition for any Add User test. | Medium |
+| 2 | The public demo does not enforce password complexity. Simple passwords like `Test@1234` are accepted without error. | Low |
+| 3 | The delete confirmation dialog text reads "Are you Sure?" — the capital S looks like a UI typo in OrangeHRM itself. | Info |
+| 4 | Username search is case-insensitive. Searching `ADMIN` returns the `Admin` account. Documented as observed behaviour, not a defect. | Info |
 
 ---
 
-## Contributing
+## Demo Environment Note
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/my-new-test`
-3. Commit your changes: `git commit -m 'Add TC-UM-11'`
-4. Push the branch: `git push origin feature/my-new-test`
-5. Open a Pull Request
+All tests run against the **public OrangeHRM demo** at
+`opensource-demo.orangehrmlive.com`. This instance is shared with anyone on
+the internet, so its data changes constantly and without warning.
+
+A few things this causes in practice:
+
+- The employee used in Add User tests (`Peter Mac Anderson`) must already
+  exist in the PIM module. If another user deletes that record, those tests
+  will fail at the autocomplete step.
+- Delete and search tests can return unexpected results if someone else
+  created or removed records between test steps.
+- The demo site is occasionally slow or temporarily down, which causes timeout
+  failures that are unrelated to the test logic itself.
+
+In a real project this would be solved by running against a dedicated test
+environment with seeded, controlled data. For this assessment the tests handle
+the most common cases and include basic cleanup steps where practical.
 
 ---
 
 ## License
 
-MIT — see [LICENSE](LICENSE) for details.
+MIT
